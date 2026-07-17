@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animación: Suma de Ángulos Interiores Exacta</title>
+    <style>
+        body { margin: 0; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        canvas { background-color: #ffffff; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; }
+        #ui-layer { position: absolute; top: 20px; right: 30px; text-align: right; pointer-events: none; }
+        .counter-title { font-size: 1.2rem; color: #666; margin-bottom: 5px; }
+        .counter-value { font-size: 3.5rem; font-weight: bold; color: #2c3e50; font-family: monospace; }
+        #message-banner { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 1.8rem; color: #e67e22; font-weight: bold; opacity: 0; transition: opacity 0.3s; background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 10px; border: 2px solid #e67e22; pointer-events: none; }
+        #final-formula { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 40px; border: 4px solid #2c3e50; border-radius: 10px; font-size: 3rem; font-weight: bold; box-shadow: 0 20px 40px rgba(0,0,0,0.2); opacity: 0; transition: opacity 1s; text-align: center; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="message-banner">¡360°: Misma orientación inicial!</div>
+
+    <div id="ui-layer">
+        <div class="counter-title">Rotación Acumulada</div>
+        <div class="counter-value" id="angle-counter">0°</div>
+    </div>
+
+    <div id="final-formula">
+        Triángulo: 180°<br>
+        Cuadrado: 360°<br>
+        Pentágono: 540°<br><br>
+        <span style="font-family: 'Times New Roman', serif; font-style: italic;">&Sigma; &theta;<sub>i</sub> = (n - 2) &times; 180°</span>
+    </div>
+
+    <canvas id="mathCanvas" width="1000" height="700"></canvas>
+
+<script>
+const canvas = document.getElementById('mathCanvas');
+const ctx = canvas.getContext('2d');
+const counterEl = document.getElementById('angle-counter');
+const bannerEl = document.getElementById('message-banner');
+const formulaEl = document.getElementById('final-formula');
+
+const PENCIL_LENGTH = 140;
+
+const sleep = ms => new Promise(res => setTimeout(res, ms));
+const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+let state = {
+    polygon: [],
+    arcs: [],
+    pencil: { tipX: 0, tipY: 0, angle: 0, active: false },
+    ghostPencil: { tipX: 0, tipY: 0, angle: 0, active: false },
+    highlight360: false
+};
+
+function drawPencilBase(tipX, tipY, angleDeg) {
+    ctx.save();
+    ctx.translate(tipX, tipY);
+    ctx.rotate(angleDeg * Math.PI / 180);
+
+    const width = 16;
+    const tipL = 30;
+    
+    ctx.fillStyle = "#e5c07b"; 
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-tipL, -width/2); ctx.lineTo(-tipL, width/2); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = "#333"; 
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-8, -width/6); ctx.lineTo(-8, width/6); ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = "#f1c40f"; 
+    ctx.fillRect(-PENCIL_LENGTH + 25, -width/2, PENCIL_LENGTH - tipL - 25, width);
+    ctx.strokeRect(-PENCIL_LENGTH + 25, -width/2, PENCIL_LENGTH - tipL - 25, width);
+
+    ctx.fillStyle = "#95a5a6"; 
+    ctx.fillRect(-PENCIL_LENGTH + 10, -width/2, 15, width);
+    ctx.strokeRect(-PENCIL_LENGTH + 10, -width/2, 15, width);
+
+    ctx.fillStyle = "#ffb8c6"; 
+    ctx.fillRect(-PENCIL_LENGTH, -width/2, 10, width);
+    ctx.strokeRect(-PENCIL_LENGTH, -width/2, 10, width);
+
+    ctx.restore();
+}
+
+function renderLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (state.polygon.length > 0) {
+        ctx.beginPath();
+        ctx.moveTo(state.polygon[0].x, state.polygon[0].y);
+        for (let i = 1; i < state.polygon.length; i++) ctx.lineTo(state.polygon[i].x, state.polygon[i].y);
+        ctx.closePath();
+        ctx.strokeStyle = "#34495e"; ctx.lineWidth = 4; ctx.stroke();
+    }
+
+    state.arcs.forEach(arc => {
+        ctx.beginPath();
+        ctx.arc(arc.x, arc.y, 40, arc.start, arc.end, true); 
+        ctx.strokeStyle = "#3498db"; ctx.lineWidth = 3; ctx.stroke();
+        
+        ctx.fillStyle = "#2980b9"; ctx.font = "bold 20px Arial";
+        let mid = (arc.start + arc.end) / 2;
+        if (Math.abs(arc.start - arc.end) > Math.PI) mid += Math.PI;
+        ctx.fillText(arc.text, arc.x + Math.cos(mid)*60 - 15, arc.y + Math.sin(mid)*60 + 7);
+    });
+
+    // Lápiz Fantasma
+    if(state.ghostPencil.active) {
+        ctx.globalAlpha = 0.3;
+        drawPencilBase(state.ghostPencil.tipX, state.ghostPencil.tipY, state.ghostPencil.angle);
+        ctx.globalAlpha = 1.0;
+    }
+
+    // Lápiz Principal
+    if(state.pencil.active) {
+        if(state.highlight360) {
+            ctx.save();
+            ctx.translate(state.pencil.tipX, state.pencil.tipY);
+            ctx.rotate(state.pencil.angle * Math.PI / 180);
+            ctx.shadowColor = "#f39c12"; ctx.shadowBlur = 20;
+            ctx.strokeStyle = "rgba(243, 156, 18, 0.8)"; ctx.lineWidth = 8;
+            ctx.strokeRect(-PENCIL_LENGTH - 4, -14, PENCIL_LENGTH + 8, 28);
+            ctx.restore();
+        }
+        drawPencilBase(state.pencil.tipX, state.pencil.tipY, state.pencil.angle);
+    }
+
+    requestAnimationFrame(renderLoop);
+}
+
+function getPolygon(sides, radius) {
+    const cx = canvas.width / 2;
+    const bottomY = canvas.height - 150; 
+    const cy = bottomY - radius * Math.cos(Math.PI / sides);
+    let vertices = [];
+    for (let i = 0; i < sides; i++) {
+        let angle = (Math.PI / 2 + Math.PI / sides) - i * (2 * Math.PI / sides);
+        vertices.push({ x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) });
+    }
+    return vertices;
+}
+
+function updateCounter(angle) {
+    counterEl.innerText = Math.round(angle) + "°";
+}
+
+function animateValue(duration, callback) {
+    return new Promise(resolve => {
+        let startTime = null;
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            let p = Math.min((timestamp - startTime) / duration, 1);
+            callback(easeInOutCubic(p));
+            if (p < 1) requestAnimationFrame(step);
+            else resolve();
+        }
+        requestAnimationFrame(step);
+    });
+}
+
+async function translateTip(targetX, targetY, duration) {
+    let startX = state.pencil.tipX; let startY = state.pencil.tipY;
+    await animateValue(duration, p => {
+        state.pencil.tipX = startX + (targetX - startX) * p;
+        state.pencil.tipY = startY + (targetY - startY) * p;
+    });
+}
+
+async function rotatePivotTip(startAng, endAng, duration) {
+    await animateValue(duration, p => {
+        state.pencil.angle = startAng + (endAng - startAng) * p;
+        updateCounter(state.pencil.angle);
+    });
+}
+
+async function rotatePivotEraser(startAng, endAng, duration) {
+    let radStart = startAng * Math.PI / 180;
+    let eraserX = state.pencil.tipX - PENCIL_LENGTH * Math.cos(radStart);
+    let eraserY = state.pencil.tipY - PENCIL_LENGTH * Math.sin(radStart);
+    await animateValue(duration, p => {
+        let curAng = startAng + (endAng - startAng) * p;
+        state.pencil.angle = curAng;
+        let radCur = curAng * Math.PI / 180;
+        state.pencil.tipX = eraserX + PENCIL_LENGTH * Math.cos(radCur);
+        state.pencil.tipY = eraserY + PENCIL_LENGTH * Math.sin(radCur);
+        updateCounter(curAng);
+    });
+}
+
+// Envoltorio para detectar cruce de 360° e inyectar la pausa didáctica
+async function performRotation(startAng, endAng, leadingPart) {
+    const rotDuration = 800; // Más rápido
+    const rotFunc = leadingPart === "tip" ? rotatePivotTip : rotatePivotEraser;
+
+    if (startAng < 360 && endAng > 360) {
+        // Fraccionar rotación para pausar en 360°
+        let p = (360 - startAng) / (endAng - startAng);
+        await rotFunc(startAng, 360, rotDuration * p);
+        
+        // Efecto visual de 360°
+        state.highlight360 = true;
+        bannerEl.style.opacity = 1;
+        await sleep(1500); // Pausa para que el alumno note la misma orientación
+        
+        state.highlight360 = false;
+        bannerEl.style.opacity = 0;
+        
+        await rotFunc(360, endAng, rotDuration * (1 - p));
+    } else {
+        await rotFunc(startAng, endAng, rotDuration);
+    }
+}
+
+async function runSequence() {
+    const shapes = [
+        { sides: 3, radius: 200 },
+        { sides: 4, radius: 220 },
+        { sides: 5, radius: 250 }
+    ];
+
+    while(true) {
+        formulaEl.style.opacity = 0;
+        state.pencil.active = true;
+
+        for (let s = 0; s < shapes.length; s++) {
+            let shape = shapes[s];
+            let n = shape.sides;
+            let intAngle = Math.round(180 * (n - 2) / n);
+            
+            let vList = getPolygon(n, shape.radius);
+            state.polygon = vList;
+            state.arcs = [];
+            
+            // CENTRO EXACTO DE LA BASE
+            let midStartX = (vList[0].x + vList[1].x) / 2;
+            let midStartY = (vList[0].y + vList[1].y) / 2;
+            
+            // Posicionar punta sumando la mitad del lápiz para que el centro quede en midStart
+            state.pencil.tipX = midStartX + PENCIL_LENGTH / 2;
+            state.pencil.tipY = midStartY;
+            state.pencil.angle = 0; 
+            updateCounter(0);
+
+            // Activar lápiz fantasma en la misma posición inicial
+            state.ghostPencil.tipX = state.pencil.tipX;
+            state.ghostPencil.tipY = state.pencil.tipY;
+            state.ghostPencil.angle = 0;
+            state.ghostPencil.active = true;
+
+            let leadingPart = "tip"; 
+            await sleep(800);
+
+            // Avance hasta el primer vértice (la distancia es solo la mitad del lápiz)
+            await translateTip(vList[1].x, vList[1].y, 600);
+
+            for (let i = 1; i <= n; i++) {
+                let currentV = vList[i % n];
+                let prevV = vList[(i - 1) % n];
+                let nextV = vList[(i + 1) % n];
+
+                let aPrev = Math.atan2(prevV.y - currentV.y, prevV.x - currentV.x);
+                let aNext = Math.atan2(nextV.y - currentV.y, nextV.x - currentV.x);
+                state.arcs.push({ x: currentV.x, y: currentV.y, start: aNext, end: aPrev, text: intAngle + "°" });
+                
+                await sleep(200);
+
+                let curAng = state.pencil.angle;
+                await performRotation(curAng, curAng + intAngle, leadingPart);
+                leadingPart = (leadingPart === "tip") ? "eraser" : "tip"; // Alternar pivote
+
+                await sleep(200);
+
+                // Determinar el próximo destino
+                let targetV = nextV;
+                // Si es el último trayecto, vamos al punto medio de la base
+                if(i === n) targetV = { x: midStartX, y: midStartY };
+
+                if (leadingPart === "tip") {
+                    if(i === n) {
+                        // Si vamos al punto medio liderando con la punta
+                        let finalTipX = midStartX + (PENCIL_LENGTH/2) * Math.cos(state.pencil.angle * Math.PI/180);
+                        let finalTipY = midStartY + (PENCIL_LENGTH/2) * Math.sin(state.pencil.angle * Math.PI/180);
+                        await translateTip(finalTipX, finalTipY, 600);
+                    } else {
+                        await translateTip(targetV.x, targetV.y, 600);
+                    }
+                } else {
+                    if(i === n) {
+                        // Si vamos al punto medio liderando con la goma
+                        let finalTipX = midStartX + (PENCIL_LENGTH/2) * Math.cos(state.pencil.angle * Math.PI/180);
+                        let finalTipY = midStartY + (PENCIL_LENGTH/2) * Math.sin(state.pencil.angle * Math.PI/180);
+                        await translateTip(finalTipX, finalTipY, 600);
+                    } else {
+                        let rad = state.pencil.angle * Math.PI / 180;
+                        let targetTipX = targetV.x + PENCIL_LENGTH * Math.cos(rad);
+                        let targetTipY = targetV.y + PENCIL_LENGTH * Math.sin(rad);
+                        await translateTip(targetTipX, targetTipY, 600);
+                    }
+                }
+            }
+
+            // Al terminar la figura, pausamamos para apreciar cómo queda sobre el fantasma
+            await sleep(1500); 
+            state.ghostPencil.active = false; // El fantasma desaparece "fundiéndose" en la solución
+            await sleep(1000);
+            
+            // Limpiamos pantalla antes de pasar a la siguiente figura
+            state.polygon = [];
+            state.arcs = [];
+        }
+
+        // --- FINAL DE SECUENCIA ---
+        state.pencil.active = false; // Ocultamos el lápiz
+        formulaEl.style.opacity = 1; // Mostramos la fórmula limpia
+        
+        await sleep(6000); // Mantenemos la fórmula 6 segundos
+    }
+}
+
+requestAnimationFrame(renderLoop);
+setTimeout(runSequence, 500);
+</script>
+</body>
+</html>
