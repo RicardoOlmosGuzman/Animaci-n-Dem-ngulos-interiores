@@ -3,484 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suma de Ángulos Interiores Simultánea</title>
+    <title>Demostración: Suma de Ángulos Interiores</title>
     <style>
-        body { 
-            margin: 0; 
-            background-color: #f4f7f6; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            font-family: 'Segoe UI', sans-serif; 
-            overflow-x: hidden;
+        :root {
+            --bg-color: #f4f7f6;
+            --text-dark: #2c3e50;
+            --primary: #2980b9;
+            --secondary: #3498db;
+            --accent: #e67e22;
         }
 
-        /* Contenedor Responsivo: Columna en Celular, Fila en PC */
-        .grid-container {
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 100%;
-            max-width: 1400px;
-            padding: 20px;
-            box-sizing: border-box;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-dark);
         }
 
-        @media (min-width: 900px) {
-            .grid-container { flex-direction: row; }
+        /* --- PANTALLA DE INICIO --- */
+        #home-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            max-width: 900px;
+            transition: opacity 0.4s ease;
         }
 
-        /* Cada ventana de animación */
-        .anim-wrapper {
+        .title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        .formula-container {
+            background: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 3px solid var(--text-dark);
+            margin-bottom: 50px;
+        }
+
+        .math-text {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+        }
+
+        .btn-shape {
+            background: white;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-shape:hover {
+            background: var(--secondary);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        /* --- PANTALLA DE ANIMACIÓN --- */
+        #anim-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            position: relative;
+        }
+
+        .canvas-container {
             position: relative;
             width: 100%;
-            max-width: 400px;
-            aspect-ratio: 1; /* Mantiene proporción cuadrada */
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            overflow: hidden;
+            max-width: 700px;
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            margin-top: 50px; /* Espacio para la UI superior */
         }
 
         canvas {
             width: 100%;
             height: 100%;
             display: block;
+            border-radius: 15px;
         }
 
-        /* UI de cada ventana */
-        .counter {
+        /* UI Superpuesta al Canvas */
+        .ui-top-left {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .ui-top-right {
             position: absolute;
             top: 15px;
             right: 20px;
-            font-size: 2rem;
+            text-align: right;
+        }
+
+        .angle-title {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-bottom: -5px;
+        }
+
+        .angle-value {
+            font-size: 3rem;
             font-weight: bold;
-            color: #2c3e50;
+            color: var(--text-dark);
             font-family: monospace;
         }
 
         .banner-360 {
             position: absolute;
-            top: 60px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.95);
-            border: 2px solid #e67e22;
-            color: #e67e22;
-            padding: 8px 15px;
-            border-radius: 8px;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 10px;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             opacity: 0;
             transition: opacity 0.3s;
-            white-space: nowrap;
             pointer-events: none;
-            box-shadow: 0 4px 10px rgba(230, 126, 34, 0.2);
-        }
-
-        /* Pantalla Final sobrepuesta */
-        #formula-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(244, 247, 246, 0.85); /* Semitransparente para ver los dibujos de fondo */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s ease-in-out;
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.2);
             z-index: 10;
         }
 
-        .formula-box {
-            background: white;
-            padding: 40px;
-            border: 4px solid #2c3e50;
-            border-radius: 12px;
-            font-size: clamp(2rem, 4vw, 3rem); /* Tamaño de texto responsivo */
+        .btn-back {
+            margin-top: 25px;
+            background: var(--text-dark);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
             font-weight: bold;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            color: #2c3e50;
+            transition: background 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .math-text {
-            font-family: 'Times New Roman', serif;
-            font-style: italic;
-            color: #2980b9;
+        .btn-back:hover {
+            background: #1a252f;
+        }
+
+        @media (max-height: 800px) {
+            .canvas-container { margin-top: 15px; max-width: 500px; }
+            .btn-back { margin-top: 15px; padding: 10px 30px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="grid-container">
-        <!-- Triángulo -->
-        <div class="anim-wrapper">
-            <div class="counter" id="counter-3">0°</div>
-            <canvas id="canvas-3" width="600" height="600"></canvas>
+    <!-- PANTALLA 1: INICIO -->
+    <div id="home-screen">
+        <div class="title">Suma de Ángulos Interiores</div>
+        <div class="subtitle">Exploración geométrica mediante rotación acumulada interactiva</div>
+        
+        <div class="formula-container">
+            <span class="math-text">&Sigma; &theta;<sub>i</sub> = (n - 2) &times; 180°</span>
         </div>
 
-        <!-- Cuadrado -->
-        <div class="anim-wrapper">
-            <div class="counter" id="counter-4">0°</div>
-            <canvas id="canvas-4" width="600" height="600"></canvas>
-        </div>
-
-        <!-- Pentágono -->
-        <div class="anim-wrapper">
-            <div class="counter" id="counter-5">0°</div>
-            <div class="banner-360" id="banner-5">¡360°: Misma orientación!</div>
-            <canvas id="canvas-5" width="600" height="600"></canvas>
+        <div class="btn-group">
+            <button class="btn-shape" onclick="startApp(3, 'Triángulo')">Triángulo (n=3)</button>
+            <button class="btn-shape" onclick="startApp(4, 'Cuadrado')">Cuadrado (n=4)</button>
+            <button class="btn-shape" onclick="startApp(5, 'Pentágono')">Pentágono (n=5)</button>
+            <button class="btn-shape" onclick="startApp(6, 'Hexágono')">Hexágono (n=6)</button>
+            <button class="btn-shape" onclick="startApp(7, 'Heptágono')">Heptágono (n=7)</button>
+            <button class="btn-shape" onclick="startApp(8, 'Octágono')">Octágono (n=8)</button>
         </div>
     </div>
 
-    <!-- Ecuación Final -->
-    <div id="formula-overlay">
-        <div class="formula-box">
-            Triángulo: 180°<br>
-            Cuadrado: 360°<br>
-            Pentágono: 540°<br><hr style="margin: 20px 0; border: 1px solid #eee;">
-            <span class="math-text">&Sigma; &theta;<sub>i</sub> = (n - 2) &times; 180°</span>
+    <!-- PANTALLA 2: ANIMACIÓN -->
+    <div id="anim-screen">
+        <div class="canvas-container">
+            <!-- UI Esquina Superior Izquierda -->
+            <div class="ui-top-left" id="ui-sides">Polígono | Lados: N</div>
+            
+            <!-- UI Esquina Superior Derecha -->
+            <div class="ui-top-right">
+                <div class="angle-title">Rotación Acumulada</div>
+                <div class="angle-value" id="ui-angle">0°</div>
+            </div>
+
+            <!-- Banner Multiplos de 360 -->
+            <div class="banner-360" id="banner-360">¡360°: Misma orientación inicial!</div>
+
+            <!-- Canvas -->
+            <canvas id="mathCanvas" width="800" height="800"></canvas>
         </div>
+
+        <button class="btn-back" onclick="goHome()">&#8592; Volver al Menú</button>
     </div>
 
 <script>
-// Utilidades globales
+// --- ELEMENTOS DEL DOM ---
+const homeScreen = document.getElementById('home-screen');
+const animScreen = document.getElementById('anim-screen');
+const canvas = document.getElementById('mathCanvas');
+const ctx = canvas.getContext('2d');
+const uiSides = document.getElementById('ui-sides');
+const uiAngle = document.getElementById('ui-angle');
+const banner360 = document.getElementById('banner-360');
+
+// --- CONSTANTES ---
+const PENCIL_LENGTH = 160;
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-// Clase que maneja cada animación independientemente
-class PolygonAnim {
-    constructor(canvasId, counterId, sides, radius, bannerId = null) {
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
-        this.counterEl = document.getElementById(counterId);
-        this.bannerEl = bannerId ? document.getElementById(bannerId) : null;
+// --- ESTADO GLOBAL ---
+let activeSessionId = 0; 
+let animState = {
+    polygon: [],
+    arcs: [],
+    pencil: { tipX: 0, tipY: 0, angle: 0, active: false },
+    ghostPencil: { tipX: 0, tipY: 0, angle: 0, active: false },
+    highlight360: false
+};
+let isRendering = false;
+
+// --- NAVEGACIÓN ---
+function startApp(sides, name) {
+    uiSides.innerText = `${name} | Lados: ${sides}`;
+    uiAngle.innerText = "0°";
+    banner360.style.opacity = 0;
+
+    homeScreen.style.opacity = 0;
+    setTimeout(() => {
+        homeScreen.style.display = 'none';
+        animScreen.style.display = 'flex';
+        setTimeout(() => animScreen.style.opacity = 1, 50);
         
-        this.sides = sides;
-        this.radius = radius;
-        this.intAngle = Math.round(180 * (sides - 2) / sides);
+        activeSessionId++;
+        if (!isRendering) {
+            isRendering = true;
+            requestAnimationFrame(renderLoop);
+        }
+        runAnimationLoop(sides, activeSessionId);
+    }, 400);
+}
+
+function goHome() {
+    activeSessionId++; // Detiene los hilos asíncronos en curso
+    animScreen.style.opacity = 0;
+    setTimeout(() => {
+        animScreen.style.display = 'none';
+        homeScreen.style.display = 'flex';
+        setTimeout(() => homeScreen.style.opacity = 1, 50);
         
-        // Escala interna adaptada para lienzo de 600x600
-        this.PENCIL_LENGTH = 100;
+        animState.polygon = [];
+        animState.arcs = [];
+        animState.pencil.active = false;
+        animState.ghostPencil.active = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        isRendering = false;
+    }, 400);
+}
+
+// --- DIBUJO ---
+function drawPencil(tipX, tipY, angleDeg) {
+    ctx.save();
+    ctx.translate(tipX, tipY);
+    ctx.rotate(angleDeg * Math.PI / 180);
+
+    const width = 18;
+    const tipL = 35;
+    
+    // Madera
+    ctx.fillStyle = "#e5c07b"; 
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-tipL, -width/2); ctx.lineTo(-tipL, width/2); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // Grafito
+    ctx.fillStyle = "#333"; 
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -width/6); ctx.lineTo(-10, width/6); ctx.closePath(); ctx.fill();
+
+    // Cuerpo
+    ctx.fillStyle = "#f1c40f"; 
+    ctx.fillRect(-PENCIL_LENGTH + 25, -width/2, PENCIL_LENGTH - tipL - 25, width);
+    ctx.strokeRect(-PENCIL_LENGTH + 25, -width/2, PENCIL_LENGTH - tipL - 25, width);
+
+    // Metal
+    ctx.fillStyle = "#95a5a6"; 
+    ctx.fillRect(-PENCIL_LENGTH + 10, -width/2, 15, width);
+    ctx.strokeRect(-PENCIL_LENGTH + 10, -width/2, 15, width);
+
+    // Goma
+    ctx.fillStyle = "#ffb8c6"; 
+    ctx.fillRect(-PENCIL_LENGTH, -width/2, 10, width);
+    ctx.strokeRect(-PENCIL_LENGTH, -width/2, 10, width);
+
+    ctx.restore();
+}
+
+function renderLoop() {
+    if (!isRendering) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (animState.polygon.length > 0) {
+        ctx.beginPath();
+        ctx.moveTo(animState.polygon[0].x, animState.polygon[0].y);
+        for (let i = 1; i < animState.polygon.length; i++) ctx.lineTo(animState.polygon[i].x, animState.polygon[i].y);
+        ctx.closePath();
+        ctx.strokeStyle = "#34495e"; ctx.lineWidth = 4; ctx.stroke();
+    }
+
+    animState.arcs.forEach(arc => {
+        ctx.beginPath();
+        ctx.arc(arc.x, arc.y, 45, arc.start, arc.end, true); 
+        ctx.strokeStyle = "#3498db"; ctx.lineWidth = 3; ctx.stroke();
         
-        this.state = {
-            polygon: [],
-            arcs: [],
-            pencil: { tipX: 0, tipY: 0, angle: 0, active: false },
-            ghostPencil: { tipX: 0, tipY: 0, angle: 0, active: false },
-            highlight360: false
+        ctx.fillStyle = "#2980b9"; ctx.font = "bold 22px Arial";
+        let mid = (arc.start + arc.end) / 2;
+        if (Math.abs(arc.start - arc.end) > Math.PI) mid += Math.PI;
+        ctx.fillText(arc.text, arc.x + Math.cos(mid)*65 - 20, arc.y + Math.sin(mid)*65 + 8);
+    });
+
+    if(animState.ghostPencil.active) {
+        ctx.globalAlpha = 0.3;
+        drawPencil(animState.ghostPencil.tipX, animState.ghostPencil.tipY, animState.ghostPencil.angle);
+        ctx.globalAlpha = 1.0;
+    }
+
+    if(animState.pencil.active) {
+        if(animState.highlight360) {
+            ctx.save();
+            ctx.translate(animState.pencil.tipX, animState.pencil.tipY);
+            ctx.rotate(animState.pencil.angle * Math.PI / 180);
+            ctx.shadowColor = "#f39c12"; ctx.shadowBlur = 20;
+            ctx.strokeStyle = "rgba(243, 156, 18, 0.8)"; ctx.lineWidth = 8;
+            ctx.strokeRect(-PENCIL_LENGTH - 6, -15, PENCIL_LENGTH + 12, 30);
+            ctx.restore();
+        }
+        drawPencil(animState.pencil.tipX, animState.pencil.tipY, animState.pencil.angle);
+    }
+
+    requestAnimationFrame(renderLoop);
+}
+
+// --- LÓGICA GEOMÉTRICA ---
+function getPolygon(sides) {
+    const cx = canvas.width / 2;
+    const radius = 220;
+    const bottomY = canvas.height - 220; 
+    const cy = bottomY - radius * Math.cos(Math.PI / sides);
+    let vertices = [];
+    for (let i = 0; i < sides; i++) {
+        let angle = (Math.PI / 2 + Math.PI / sides) - i * (2 * Math.PI / sides);
+        vertices.push({ x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) });
+    }
+    return vertices;
+}
+
+function animateValue(duration, sessionId, callback) {
+    return new Promise(resolve => {
+        let startTime = null;
+        const step = (timestamp) => {
+            if (activeSessionId !== sessionId) return resolve(false); 
+            if (!startTime) startTime = timestamp;
+            let p = Math.min((timestamp - startTime) / duration, 1);
+            callback(easeInOutCubic(p));
+            if (p < 1) requestAnimationFrame(step);
+            else resolve(true);
         };
-    }
+        requestAnimationFrame(step);
+    });
+}
 
-    drawPencilBase(tipX, tipY, angleDeg) {
-        this.ctx.save();
-        this.ctx.translate(tipX, tipY);
-        this.ctx.rotate(angleDeg * Math.PI / 180);
+function renderAngleUI(angle) {
+    // Redondea a 1 decimal solo para la interfaz visual
+    uiAngle.innerText = Number(angle.toFixed(1)) + "°";
+}
 
-        const width = 12;
-        const tipL = 22;
+async function translateTip(targetX, targetY, duration, sessionId) {
+    let startX = animState.pencil.tipX; let startY = animState.pencil.tipY;
+    return await animateValue(duration, sessionId, p => {
+        animState.pencil.tipX = startX + (targetX - startX) * p;
+        animState.pencil.tipY = startY + (targetY - startY) * p;
+    });
+}
+
+async function rotatePivotTip(startAng, endAng, duration, sessionId) {
+    return await animateValue(duration, sessionId, p => {
+        animState.pencil.angle = startAng + (endAng - startAng) * p;
+        renderAngleUI(animState.pencil.angle);
+    });
+}
+
+async function rotatePivotEraser(startAng, endAng, duration, sessionId) {
+    let radStart = startAng * Math.PI / 180;
+    let eraserX = animState.pencil.tipX - PENCIL_LENGTH * Math.cos(radStart);
+    let eraserY = animState.pencil.tipY - PENCIL_LENGTH * Math.sin(radStart);
+    return await animateValue(duration, sessionId, p => {
+        let curAng = startAng + (endAng - startAng) * p;
+        animState.pencil.angle = curAng;
+        let radCur = curAng * Math.PI / 180;
+        animState.pencil.tipX = eraserX + PENCIL_LENGTH * Math.cos(radCur);
+        animState.pencil.tipY = eraserY + PENCIL_LENGTH * Math.sin(radCur);
+        renderAngleUI(curAng);
+    });
+}
+
+// --- DETECCIÓN DE MÚLTIPLOS DE 360 ---
+async function performRotation(startAng, endAng, leadingPart, sessionId) {
+    const rotDuration = 600;
+    
+    // Detecta el mayor múltiplo de 360 contenido en el final de esta rotación
+    let targetMultiple = Math.floor((endAng + 0.001) / 360) * 360;
+    
+    // Si cruzamos o llegamos exactamente a un múltiplo de 360 en ESTE paso
+    if (targetMultiple > 0 && startAng < targetMultiple && endAng >= targetMultiple) {
+        let p = (targetMultiple - startAng) / (endAng - startAng);
         
-        // Madera
-        this.ctx.fillStyle = "#e5c07b"; 
-        this.ctx.beginPath(); this.ctx.moveTo(0, 0); this.ctx.lineTo(-tipL, -width/2); this.ctx.lineTo(-tipL, width/2); this.ctx.closePath(); this.ctx.fill(); this.ctx.stroke();
-
-        // Grafito
-        this.ctx.fillStyle = "#333"; 
-        this.ctx.beginPath(); this.ctx.moveTo(0, 0); this.ctx.lineTo(-6, -width/6); this.ctx.lineTo(-6, width/6); this.ctx.closePath(); this.ctx.fill();
-
-        // Cuerpo
-        this.ctx.fillStyle = "#f1c40f"; 
-        this.ctx.fillRect(-this.PENCIL_LENGTH + 18, -width/2, this.PENCIL_LENGTH - tipL - 18, width);
-        this.ctx.strokeRect(-this.PENCIL_LENGTH + 18, -width/2, this.PENCIL_LENGTH - tipL - 18, width);
-
-        // Anillo
-        this.ctx.fillStyle = "#95a5a6"; 
-        this.ctx.fillRect(-this.PENCIL_LENGTH + 8, -width/2, 10, width);
-        this.ctx.strokeRect(-this.PENCIL_LENGTH + 8, -width/2, 10, width);
-
-        // Goma
-        this.ctx.fillStyle = "#ffb8c6"; 
-        this.ctx.fillRect(-this.PENCIL_LENGTH, -width/2, 8, width);
-        this.ctx.strokeRect(-this.PENCIL_LENGTH, -width/2, 8, width);
-
-        this.ctx.restore();
-    }
-
-    render() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Polígono
-        if (this.state.polygon.length > 0) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(this.state.polygon[0].x, this.state.polygon[0].y);
-            for (let i = 1; i < this.state.polygon.length; i++) {
-                this.ctx.lineTo(this.state.polygon[i].x, this.state.polygon[i].y);
-            }
-            this.ctx.closePath();
-            this.ctx.strokeStyle = "#34495e"; this.ctx.lineWidth = 4; this.ctx.stroke();
-        }
-
-        // Arcos
-        this.state.arcs.forEach(arc => {
-            this.ctx.beginPath();
-            this.ctx.arc(arc.x, arc.y, 35, arc.start, arc.end, true); 
-            this.ctx.strokeStyle = "#3498db"; this.ctx.lineWidth = 3; this.ctx.stroke();
-            
-            this.ctx.fillStyle = "#2980b9"; this.ctx.font = "bold 18px Arial";
-            let mid = (arc.start + arc.end) / 2;
-            if (Math.abs(arc.start - arc.end) > Math.PI) mid += Math.PI;
-            this.ctx.fillText(arc.text, arc.x + Math.cos(mid)*50 - 15, arc.y + Math.sin(mid)*50 + 6);
-        });
-
-        // Lápiz Fantasma (Fijo en el inicio)
-        if(this.state.ghostPencil.active) {
-            this.ctx.globalAlpha = 0.3;
-            this.drawPencilBase(this.state.ghostPencil.tipX, this.state.ghostPencil.tipY, this.state.ghostPencil.angle);
-            this.ctx.globalAlpha = 1.0;
-        }
-
-        // Lápiz Principal
-        if(this.state.pencil.active) {
-            if(this.state.highlight360) {
-                this.ctx.save();
-                this.ctx.translate(this.state.pencil.tipX, this.state.pencil.tipY);
-                this.ctx.rotate(this.state.pencil.angle * Math.PI / 180);
-                this.ctx.shadowColor = "#f39c12"; this.ctx.shadowBlur = 20;
-                this.ctx.strokeStyle = "rgba(243, 156, 18, 0.8)"; this.ctx.lineWidth = 6;
-                this.ctx.strokeRect(-this.PENCIL_LENGTH - 4, -10, this.PENCIL_LENGTH + 8, 20);
-                this.ctx.restore();
-            }
-            this.drawPencilBase(this.state.pencil.tipX, this.state.pencil.tipY, this.state.pencil.angle);
-        }
-    }
-
-    getPolygonVertices() {
-        const cx = this.canvas.width / 2;
-        const bottomY = this.canvas.height - 120; // Línea base igual para todos
-        const cy = bottomY - this.radius * Math.cos(Math.PI / this.sides);
-        let vertices = [];
-        for (let i = 0; i < this.sides; i++) {
-            let angle = (Math.PI / 2 + Math.PI / this.sides) - i * (2 * Math.PI / this.sides);
-            vertices.push({ x: cx + this.radius * Math.cos(angle), y: cy + this.radius * Math.sin(angle) });
-        }
-        return vertices;
-    }
-
-    updateCounter(angle) {
-        this.counterEl.innerText = Math.round(angle) + "°";
-    }
-
-    animateValue(duration, callback) {
-        return new Promise(resolve => {
-            let startTime = null;
-            const step = (timestamp) => {
-                if (!startTime) startTime = timestamp;
-                let p = Math.min((timestamp - startTime) / duration, 1);
-                callback(easeInOutCubic(p));
-                if (p < 1) requestAnimationFrame(step);
-                else resolve();
-            };
-            requestAnimationFrame(step);
-        });
-    }
-
-    async translateTip(targetX, targetY, duration) {
-        let startX = this.state.pencil.tipX; let startY = this.state.pencil.tipY;
-        await this.animateValue(duration, p => {
-            this.state.pencil.tipX = startX + (targetX - startX) * p;
-            this.state.pencil.tipY = startY + (targetY - startY) * p;
-        });
-    }
-
-    async rotatePivotTip(startAng, endAng, duration) {
-        await this.animateValue(duration, p => {
-            this.state.pencil.angle = startAng + (endAng - startAng) * p;
-            this.updateCounter(this.state.pencil.angle);
-        });
-    }
-
-    async rotatePivotEraser(startAng, endAng, duration) {
-        let radStart = startAng * Math.PI / 180;
-        let eraserX = this.state.pencil.tipX - this.PENCIL_LENGTH * Math.cos(radStart);
-        let eraserY = this.state.pencil.tipY - this.PENCIL_LENGTH * Math.sin(radStart);
-        await this.animateValue(duration, p => {
-            let curAng = startAng + (endAng - startAng) * p;
-            this.state.pencil.angle = curAng;
-            let radCur = curAng * Math.PI / 180;
-            this.state.pencil.tipX = eraserX + this.PENCIL_LENGTH * Math.cos(radCur);
-            this.state.pencil.tipY = eraserY + this.PENCIL_LENGTH * Math.sin(radCur);
-            this.updateCounter(curAng);
-        });
-    }
-
-    async performRotation(startAng, endAng, leadingPart) {
-        const rotDuration = 700; // Rotación un poco más rápida
-
-        if (startAng < 360 && endAng > 360 && this.bannerEl) {
-            let p = (360 - startAng) / (endAng - startAng);
-            
-            // 1. Rotar hasta 360 exactos
-            if(leadingPart === "tip") await this.rotatePivotTip(startAng, 360, rotDuration * p);
-            else await this.rotatePivotEraser(startAng, 360, rotDuration * p);
-            
-            // 2. Efecto visual y Pausa de 1.5s
-            this.state.highlight360 = true;
-            this.bannerEl.style.opacity = 1;
-            await sleep(1500); 
-            
-            this.state.highlight360 = false;
-            this.bannerEl.style.opacity = 0;
-            
-            // 3. Continuar el resto de la rotación
-            if(leadingPart === "tip") await this.rotatePivotTip(360, endAng, rotDuration * (1 - p));
-            else await this.rotatePivotEraser(360, endAng, rotDuration * (1 - p));
-
-        } else {
-            if(leadingPart === "tip") await this.rotatePivotTip(startAng, endAng, rotDuration);
-            else await this.rotatePivotEraser(startAng, endAng, rotDuration);
-        }
-    }
-
-    async runSequence() {
-        this.state.polygon = this.getPolygonVertices();
-        this.state.arcs = [];
-        let vList = this.state.polygon;
-        let n = this.sides;
+        // Fase 1: Rotar hasta el punto exacto de 360, 720, etc.
+        let ok1 = leadingPart === "tip" 
+            ? await rotatePivotTip(startAng, targetMultiple, rotDuration * p, sessionId)
+            : await rotatePivotEraser(startAng, targetMultiple, rotDuration * p, sessionId);
+        if(!ok1) return false;
         
+        // Fase 2: Pausa didáctica y efecto visual
+        animState.highlight360 = true;
+        banner360.innerText = `¡${targetMultiple}°: Misma orientación inicial!`;
+        banner360.style.opacity = 1;
+        
+        await sleep(1500);
+        if (activeSessionId !== sessionId) return false;
+        
+        animState.highlight360 = false;
+        banner360.style.opacity = 0;
+        
+        // Fase 3: Completar el resto de la rotación (si es que la rotación total pasaba los 360)
+        if (p < 1) {
+            let ok2 = leadingPart === "tip"
+                ? await rotatePivotTip(targetMultiple, endAng, rotDuration * (1 - p), sessionId)
+                : await rotatePivotEraser(targetMultiple, endAng, rotDuration * (1 - p), sessionId);
+            if(!ok2) return false;
+        }
+        return true;
+    } else {
+        // Rotación normal sin interrupciones
+        return leadingPart === "tip"
+            ? await rotatePivotTip(startAng, endAng, rotDuration, sessionId)
+            : await rotatePivotEraser(startAng, endAng, rotDuration, sessionId);
+    }
+}
+
+async function runAnimationLoop(sides, sessionId) {
+    // Calculamos el valor exacto para evitar errores de acumulación (ej: Heptágono)
+    const exactIntAngle = 180 * (sides - 2) / sides;
+    const displayAngleStr = Number(exactIntAngle.toFixed(1)) + "°";
+    const transSpeed = 500;
+
+    while (activeSessionId === sessionId) {
+        animState.polygon = getPolygon(sides);
+        animState.arcs = [];
+        renderAngleUI(0);
+        banner360.style.opacity = 0;
+        
+        let vList = animState.polygon;
         let midStartX = (vList[0].x + vList[1].x) / 2;
         let midStartY = (vList[0].y + vList[1].y) / 2;
         
-        // Centrado inicial
-        this.state.pencil.tipX = midStartX + this.PENCIL_LENGTH / 2;
-        this.state.pencil.tipY = midStartY;
-        this.state.pencil.angle = 0; 
-        this.state.pencil.active = true;
-        this.updateCounter(0);
+        animState.pencil.tipX = midStartX + PENCIL_LENGTH / 2;
+        animState.pencil.tipY = midStartY;
+        animState.pencil.angle = 0; 
+        animState.pencil.active = true;
 
-        // Fantasma
-        this.state.ghostPencil.tipX = this.state.pencil.tipX;
-        this.state.ghostPencil.tipY = this.state.pencil.tipY;
-        this.state.ghostPencil.angle = 0;
-        this.state.ghostPencil.active = true;
+        animState.ghostPencil.tipX = animState.pencil.tipX;
+        animState.ghostPencil.tipY = animState.pencil.tipY;
+        animState.ghostPencil.angle = 0;
+        animState.ghostPencil.active = true;
 
         let leadingPart = "tip"; 
+        
         await sleep(800);
+        if (activeSessionId !== sessionId) break;
 
-        // Velocidad aumentada de traslación
-        const transSpeed = 500; 
+        if(!(await translateTip(vList[1].x, vList[1].y, transSpeed, sessionId))) break;
 
-        await this.translateTip(vList[1].x, vList[1].y, transSpeed);
-
-        for (let i = 1; i <= n; i++) {
-            let currentV = vList[i % n];
-            let prevV = vList[(i - 1) % n];
-            let nextV = vList[(i + 1) % n];
+        for (let i = 1; i <= sides; i++) {
+            let currentV = vList[i % sides];
+            let prevV = vList[(i - 1) % sides];
+            let nextV = vList[(i + 1) % sides];
 
             let aPrev = Math.atan2(prevV.y - currentV.y, prevV.x - currentV.x);
             let aNext = Math.atan2(nextV.y - currentV.y, nextV.x - currentV.x);
-            this.state.arcs.push({ x: currentV.x, y: currentV.y, start: aNext, end: aPrev, text: this.intAngle + "°" });
             
-            await sleep(150);
+            animState.arcs.push({ 
+                x: currentV.x, y: currentV.y, start: aNext, end: aPrev, text: displayAngleStr 
+            });
+            
+            await sleep(200);
+            if (activeSessionId !== sessionId) break;
 
-            let curAng = this.state.pencil.angle;
-            await this.performRotation(curAng, curAng + this.intAngle, leadingPart);
+            let curAng = animState.pencil.angle;
+            // Se usa el valor matemático exacto de la rotación
+            if(!(await performRotation(curAng, curAng + exactIntAngle, leadingPart, sessionId))) break;
+            
             leadingPart = (leadingPart === "tip") ? "eraser" : "tip"; 
 
-            await sleep(150);
+            await sleep(200);
+            if (activeSessionId !== sessionId) break;
 
-            let targetV = (i === n) ? { x: midStartX, y: midStartY } : nextV;
+            let targetV = (i === sides) ? { x: midStartX, y: midStartY } : nextV;
 
             if (leadingPart === "tip") {
-                if(i === n) {
-                    let finalTipX = midStartX + (this.PENCIL_LENGTH/2) * Math.cos(this.state.pencil.angle * Math.PI/180);
-                    let finalTipY = midStartY + (this.PENCIL_LENGTH/2) * Math.sin(this.state.pencil.angle * Math.PI/180);
-                    await this.translateTip(finalTipX, finalTipY, transSpeed);
+                if(i === sides) {
+                    let finalTipX = midStartX + (PENCIL_LENGTH/2) * Math.cos(animState.pencil.angle * Math.PI/180);
+                    let finalTipY = midStartY + (PENCIL_LENGTH/2) * Math.sin(animState.pencil.angle * Math.PI/180);
+                    if(!(await translateTip(finalTipX, finalTipY, transSpeed, sessionId))) break;
                 } else {
-                    await this.translateTip(targetV.x, targetV.y, transSpeed);
+                    if(!(await translateTip(targetV.x, targetV.y, transSpeed, sessionId))) break;
                 }
             } else {
-                if(i === n) {
-                    let finalTipX = midStartX + (this.PENCIL_LENGTH/2) * Math.cos(this.state.pencil.angle * Math.PI/180);
-                    let finalTipY = midStartY + (this.PENCIL_LENGTH/2) * Math.sin(this.state.pencil.angle * Math.PI/180);
-                    await this.translateTip(finalTipX, finalTipY, transSpeed);
+                if(i === sides) {
+                    let finalTipX = midStartX + (PENCIL_LENGTH/2) * Math.cos(animState.pencil.angle * Math.PI/180);
+                    let finalTipY = midStartY + (PENCIL_LENGTH/2) * Math.sin(animState.pencil.angle * Math.PI/180);
+                    if(!(await translateTip(finalTipX, finalTipY, transSpeed, sessionId))) break;
                 } else {
-                    let rad = this.state.pencil.angle * Math.PI / 180;
-                    let targetTipX = targetV.x + this.PENCIL_LENGTH * Math.cos(rad);
-                    let targetTipY = targetV.y + this.PENCIL_LENGTH * Math.sin(rad);
-                    await this.translateTip(targetTipX, targetTipY, transSpeed);
+                    let rad = animState.pencil.angle * Math.PI / 180;
+                    let targetTipX = targetV.x + PENCIL_LENGTH * Math.cos(rad);
+                    let targetTipY = targetV.y + PENCIL_LENGTH * Math.sin(rad);
+                    if(!(await translateTip(targetTipX, targetTipY, transSpeed, sessionId))) break;
                 }
             }
         }
 
-        // Final de la figura
-        await sleep(1000); 
-        this.state.ghostPencil.active = false; 
-        
-        // No borramos la figura ni los arcos para que queden de fondo
-    }
+        if (activeSessionId !== sessionId) break;
 
-    clearState() {
-        this.state.polygon = [];
-        this.state.arcs = [];
-        this.state.pencil.active = false;
-        this.state.ghostPencil.active = false;
-        this.updateCounter(0);
+        await sleep(1500);
+        if (activeSessionId !== sessionId) break;
+        
+        animState.ghostPencil.active = false; 
+        
+        await sleep(1500);
     }
 }
-
-// Inicialización de las 3 animaciones
-const anim3 = new PolygonAnim('canvas-3', 'counter-3', 3, 140);
-const anim4 = new PolygonAnim('canvas-4', 'counter-4', 4, 160);
-const anim5 = new PolygonAnim('canvas-5', 'counter-5', 5, 180, 'banner-5');
-
-// Bucle de renderizado global que actualiza todos los lienzos a 60fps
-function globalRenderLoop() {
-    anim3.render();
-    anim4.render();
-    anim5.render();
-    requestAnimationFrame(globalRenderLoop);
-}
-
-// Controlador maestro que sincroniza y repite el proceso
-async function masterSequence() {
-    const overlay = document.getElementById('formula-overlay');
-
-    while(true) {
-        overlay.style.opacity = 0;
-        
-        // Limpiamos los rastros de la ronda anterior
-        anim3.clearState(); anim4.clearState(); anim5.clearState();
-        
-        await sleep(500);
-
-        // Arrancamos las tres promesas en paralelo
-        let p3 = anim3.runSequence();
-        let p4 = anim4.runSequence();
-        let p5 = anim5.runSequence();
-        
-        // Esperamos a que la más larga (Pentágono) termine
-        await Promise.all([p3, p4, p5]);
-        
-        // Pequeña pausa antes de mostrar la fórmula
-        await sleep(500);
-        
-        // Hacemos aparecer la fórmula sin borrar los dibujos de fondo
-        overlay.style.opacity = 1;
-        
-        // Mostramos el resumen por 6 segundos
-        await sleep(6000);
-    }
-}
-
-// Arrancar
-requestAnimationFrame(globalRenderLoop);
-masterSequence();
-
 </script>
 </body>
 </html>
